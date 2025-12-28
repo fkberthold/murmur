@@ -1,0 +1,5 @@
+name: invalid-transformer
+nodes:
+  - name: step1
+    transformer: nonexistent
+    inputs: {}
