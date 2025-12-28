@@ -3,7 +3,7 @@ graph: full
 
 config:
   news_topics_file: news_topics.yaml
-  piper_model: en_US-libritts_r-medium
+  piper_model: en_US-amy-medium
   sentence_silence: 0.3
   narrator_style: warm-professional
   target_duration: 5
