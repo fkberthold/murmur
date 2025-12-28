@@ -45,13 +45,16 @@ class GraphExecutor:
         self,
         graph: dict,
         registry: TransformerRegistry,
-        artifact_dir: Path | None = None
+        artifact_dir: Path | None = None,
+        cached_nodes: list[str] | None = None,
+        run_id: str | None = None,
     ):
         self.graph = graph
         self.registry = registry
         self.nodes = {node["name"]: node for node in graph.get("nodes", [])}
         self.artifact_dir = artifact_dir
-        self.run_id = datetime.now().strftime("%Y%m%d_%H%M%S")
+        self.cached_nodes = set(cached_nodes or [])
+        self.run_id = run_id or datetime.now().strftime("%Y%m%d_%H%M%S")
 
         # Validate at construction time
         validate_graph(graph, registry)
@@ -66,6 +69,18 @@ class GraphExecutor:
         with open(artifact_path, "w") as f:
             json.dump(data, f, indent=2, default=str)
 
+    def _load_cached_artifact(self, node_name: str) -> dict | None:
+        """Load cached node output if it exists."""
+        if self.artifact_dir is None:
+            return None
+
+        artifact_path = self.artifact_dir / f"{self.run_id}_{node_name}.json"
+        if not artifact_path.exists():
+            return None
+
+        with open(artifact_path) as f:
+            return json.load(f)
+
     def execute(self, config: dict) -> TransformerIO:
         """Execute the graph and return final state."""
         deps = _build_dependency_graph(self.graph)
@@ -76,6 +91,13 @@ class GraphExecutor:
         all_artifacts: dict[str, Path] = {}
 
         for node_name in execution_order:
+            # Try to load from cache
+            if node_name in self.cached_nodes:
+                cached_data = self._load_cached_artifact(node_name)
+                if cached_data is not None:
+                    node_outputs[node_name] = cached_data
+                    continue
+
             node = self.nodes[node_name]
             transformer = self.registry.get(node["transformer"])
 

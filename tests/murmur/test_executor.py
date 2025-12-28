@@ -128,3 +128,44 @@ def test_executor_saves_intermediate_artifacts(tmp_path):
     # Check artifact was saved
     artifacts = list(tmp_path.glob("*_step1.json"))
     assert len(artifacts) == 1
+
+
+def test_executor_uses_cached_nodes(tmp_path):
+    """Executor should load cached outputs instead of running transformer."""
+    registry = TransformerRegistry()
+    registry.register(AddOneTransformer)
+    registry.register(DoubleTransformer)
+
+    # Pre-create cached artifact
+    run_id = "20241227_120000"
+    cached_file = tmp_path / f"{run_id}_add.json"
+    cached_file.write_text('{"result": 100}')  # Fake cached value
+
+    graph = {
+        "name": "test",
+        "nodes": [
+            {
+                "name": "add",
+                "transformer": "add-one",
+                "inputs": {"value": "$config.start"},
+            },
+            {
+                "name": "double",
+                "transformer": "double",
+                "inputs": {"value": "$add.result"},
+            }
+        ]
+    }
+    config = {"start": 5}
+
+    executor = GraphExecutor(
+        graph, registry,
+        artifact_dir=tmp_path,
+        cached_nodes=["add"],
+        run_id=run_id
+    )
+    result = executor.execute(config)
+
+    # Should use cached value (100) not computed (6)
+    # 100 * 2 = 200
+    assert result.data["double"]["result"] == 200
