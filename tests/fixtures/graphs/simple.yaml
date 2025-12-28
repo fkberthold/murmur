@@ -1,0 +1,7 @@
+name: simple-test
+
+nodes:
+  - name: echo
+    transformer: echo
+    inputs:
+      message: $config.greeting
