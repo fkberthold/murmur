@@ -1,3 +1,10 @@
+from pathlib import Path
+from typing import Any
+from murmur.core import TransformerIO
+from murmur.registry import TransformerRegistry
+from murmur.graph import _build_dependency_graph, validate_graph
+
+
 def topological_sort(deps: dict[str, set[str]]) -> list[str]:
     """
     Return nodes in topological order (dependencies before dependents).
@@ -27,3 +34,66 @@ def topological_sort(deps: dict[str, set[str]]) -> list[str]:
                 queue.append(dependent)
 
     return result
+
+
+class GraphExecutor:
+    """Executes a transformer graph."""
+
+    def __init__(self, graph: dict, registry: TransformerRegistry):
+        self.graph = graph
+        self.registry = registry
+        self.nodes = {node["name"]: node for node in graph.get("nodes", [])}
+
+        # Validate at construction time
+        validate_graph(graph, registry)
+
+    def execute(self, config: dict) -> TransformerIO:
+        """Execute the graph and return final state."""
+        deps = _build_dependency_graph(self.graph)
+        execution_order = topological_sort(deps)
+
+        # Store outputs from each node
+        node_outputs: dict[str, dict] = {}
+        all_artifacts: dict[str, Path] = {}
+
+        for node_name in execution_order:
+            node = self.nodes[node_name]
+            transformer = self.registry.get(node["transformer"])
+
+            # Resolve inputs
+            resolved_inputs = {}
+            for input_key, source in node.get("inputs", {}).items():
+                resolved_inputs[input_key] = self._resolve_reference(
+                    source, config, node_outputs
+                )
+
+            # Execute transformer
+            input_io = TransformerIO(data=resolved_inputs)
+            output_io = transformer.process(input_io)
+
+            # Store outputs
+            node_outputs[node_name] = output_io.data
+            all_artifacts.update(output_io.artifacts)
+
+        return TransformerIO(data=node_outputs, artifacts=all_artifacts)
+
+    def _resolve_reference(
+        self, source: Any, config: dict, node_outputs: dict[str, dict]
+    ) -> Any:
+        """Resolve a $config.x or $node.output reference."""
+        if not isinstance(source, str) or not source.startswith("$"):
+            return source
+
+        ref = source[1:]  # Remove $
+
+        if ref.startswith("config."):
+            key = ref[7:]  # Remove "config."
+            return config.get(key)
+
+        # Node reference: $node.output
+        parts = ref.split(".", 1)
+        if len(parts) == 2:
+            node_name, output_key = parts
+            return node_outputs.get(node_name, {}).get(output_key)
+
+        return source  # Return as-is if can't resolve
