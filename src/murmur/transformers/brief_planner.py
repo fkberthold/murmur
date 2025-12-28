@@ -1,10 +1,19 @@
 import json
+import re
 from pathlib import Path
 from murmur.core import Transformer, TransformerIO
 from murmur.claude import run_claude
 
 
 PROMPT_PATH = Path(__file__).parent.parent.parent.parent / "prompts" / "plan.md"
+
+
+def extract_json(text: str) -> str:
+    """Extract JSON from text, handling markdown code blocks."""
+    match = re.search(r'```(?:json)?\s*([\s\S]*?)```', text)
+    if match:
+        return match.group(1).strip()
+    return text.strip()
 
 
 class BriefPlanner(Transformer):
@@ -29,7 +38,8 @@ class BriefPlanner(Transformer):
         # Call Claude (no tools needed for planning)
         response = run_claude(prompt, allowed_tools=[])
 
-        # Parse JSON response
-        plan = json.loads(response)
+        # Parse JSON response (handle markdown code blocks)
+        json_str = extract_json(response)
+        plan = json.loads(json_str)
 
         return TransformerIO(data={"plan": plan})

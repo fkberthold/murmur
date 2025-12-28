@@ -1,10 +1,21 @@
 import json
+import re
 from pathlib import Path
 from murmur.core import Transformer, TransformerIO
 from murmur.claude import run_claude
 
 
 PROMPT_PATH = Path(__file__).parent.parent.parent.parent / "prompts" / "gather.md"
+
+
+def extract_json(text: str) -> str:
+    """Extract JSON from text, handling markdown code blocks."""
+    # Try to find JSON in markdown code block
+    match = re.search(r'```(?:json)?\s*([\s\S]*?)```', text)
+    if match:
+        return match.group(1).strip()
+    # Otherwise return as-is
+    return text.strip()
 
 
 class NewsFetcher(Transformer):
@@ -32,7 +43,8 @@ class NewsFetcher(Transformer):
         # Call Claude with web search
         response = run_claude(prompt, allowed_tools=["WebSearch"])
 
-        # Parse JSON response
-        gathered_data = json.loads(response)
+        # Parse JSON response (handle markdown code blocks)
+        json_str = extract_json(response)
+        gathered_data = json.loads(json_str)
 
         return TransformerIO(data={"gathered_data": gathered_data})

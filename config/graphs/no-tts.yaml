@@ -1,0 +1,20 @@
+name: no-tts-brief
+
+nodes:
+  - name: gather
+    transformer: news-fetcher
+    inputs:
+      topics: $config.news_topics
+
+  - name: plan
+    transformer: brief-planner
+    inputs:
+      gathered_data: $gather.gathered_data
+
+  - name: generate
+    transformer: script-generator
+    inputs:
+      plan: $plan.plan
+      gathered_data: $gather.gathered_data
+      narrator_style: $config.narrator_style
+      target_duration: $config.target_duration
