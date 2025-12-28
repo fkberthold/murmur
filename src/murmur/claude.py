@@ -1,0 +1,48 @@
+import subprocess
+from pathlib import Path
+
+
+class ClaudeError(Exception):
+    """Raised when Claude subprocess fails."""
+    pass
+
+
+def run_claude(
+    prompt: str,
+    allowed_tools: list[str] | None = None,
+    cwd: Path | None = None,
+    timeout: int = 600,
+) -> str:
+    """
+    Run Claude CLI in headless mode and return response.
+
+    Args:
+        prompt: The prompt to send to Claude
+        allowed_tools: Optional list of tools to allow (e.g., ["WebSearch"])
+        cwd: Working directory for subprocess
+        timeout: Timeout in seconds (default 10 minutes)
+
+    Returns:
+        Claude's response text
+
+    Raises:
+        ClaudeError: If subprocess fails
+    """
+    cmd = ["claude", "--print", "--dangerously-skip-permissions"]
+
+    if allowed_tools:
+        cmd.extend(["--allowedTools", ",".join(allowed_tools)])
+
+    result = subprocess.run(
+        cmd,
+        input=prompt,
+        capture_output=True,
+        text=True,
+        cwd=cwd,
+        timeout=timeout,
+    )
+
+    if result.returncode != 0:
+        raise ClaudeError(result.stderr or f"Claude exited with code {result.returncode}")
+
+    return result.stdout
