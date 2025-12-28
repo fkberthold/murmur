@@ -1,0 +1,19 @@
+{
+  "$schema": "https://raw.githubusercontent.com/jetify-com/devbox/0.14.2/.schema/devbox.schema.json",
+  "packages": [
+    "python@3.11",
+    "ffmpeg"
+  ],
+  "shell": {
+    "init_hook": [
+      "if [ ! -d .venv ]; then python -m venv .venv --upgrade-deps; fi",
+      "source .venv/bin/activate",
+      "pip install -q -e '.[dev]'"
+    ],
+    "scripts": {
+      "test": "pytest tests/ -v",
+      "test:cov": "pytest tests/ -v --cov=murmur",
+      "install:tts": "pip install -e '.[tts]'"
+    }
+  }
+}
