@@ -1,3 +1,5 @@
+import json
+from datetime import datetime
 from pathlib import Path
 from typing import Any
 from murmur.core import TransformerIO
@@ -39,13 +41,30 @@ def topological_sort(deps: dict[str, set[str]]) -> list[str]:
 class GraphExecutor:
     """Executes a transformer graph."""
 
-    def __init__(self, graph: dict, registry: TransformerRegistry):
+    def __init__(
+        self,
+        graph: dict,
+        registry: TransformerRegistry,
+        artifact_dir: Path | None = None
+    ):
         self.graph = graph
         self.registry = registry
         self.nodes = {node["name"]: node for node in graph.get("nodes", [])}
+        self.artifact_dir = artifact_dir
+        self.run_id = datetime.now().strftime("%Y%m%d_%H%M%S")
 
         # Validate at construction time
         validate_graph(graph, registry)
+
+    def _save_artifact(self, node_name: str, data: dict) -> None:
+        """Save node output to artifact directory."""
+        if self.artifact_dir is None:
+            return
+
+        self.artifact_dir.mkdir(parents=True, exist_ok=True)
+        artifact_path = self.artifact_dir / f"{self.run_id}_{node_name}.json"
+        with open(artifact_path, "w") as f:
+            json.dump(data, f, indent=2, default=str)
 
     def execute(self, config: dict) -> TransformerIO:
         """Execute the graph and return final state."""
@@ -74,6 +93,9 @@ class GraphExecutor:
             # Store outputs
             node_outputs[node_name] = output_io.data
             all_artifacts.update(output_io.artifacts)
+
+            # Save intermediate artifact
+            self._save_artifact(node_name, output_io.data)
 
         return TransformerIO(data=node_outputs, artifacts=all_artifacts)
 

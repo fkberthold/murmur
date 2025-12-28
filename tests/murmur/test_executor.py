@@ -103,3 +103,28 @@ def test_topological_sort_parallel_nodes():
     order = topological_sort(deps)
     assert order.index("a") < order.index("merge")
     assert order.index("b") < order.index("merge")
+
+
+def test_executor_saves_intermediate_artifacts(tmp_path):
+    """Executor should save node outputs to artifact directory."""
+    registry = TransformerRegistry()
+    registry.register(AddOneTransformer)
+
+    graph = {
+        "name": "test",
+        "nodes": [
+            {
+                "name": "step1",
+                "transformer": "add-one",
+                "inputs": {"value": "$config.start"},
+            }
+        ]
+    }
+    config = {"start": 5}
+
+    executor = GraphExecutor(graph, registry, artifact_dir=tmp_path)
+    result = executor.execute(config)
+
+    # Check artifact was saved
+    artifacts = list(tmp_path.glob("*_step1.json"))
+    assert len(artifacts) == 1
