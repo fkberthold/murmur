@@ -11,6 +11,51 @@ class GraphValidationError(Exception):
     pass
 
 
+def _build_dependency_graph(graph: dict) -> dict[str, set[str]]:
+    """Build adjacency list of node dependencies."""
+    deps: dict[str, set[str]] = {}
+    for node in graph.get("nodes", []):
+        node_name = node["name"]
+        deps[node_name] = set()
+        for source in node.get("inputs", {}).values():
+            if isinstance(source, str) and source.startswith("$") and not source.startswith("$config."):
+                parts = source[1:].split(".", 1)
+                if len(parts) == 2:
+                    deps[node_name].add(parts[0])
+    return deps
+
+
+def _detect_cycle(deps: dict[str, set[str]]) -> list[str] | None:
+    """Detect cycle using DFS. Returns cycle path if found, None otherwise."""
+    WHITE, GRAY, BLACK = 0, 1, 2
+    color = {node: WHITE for node in deps}
+    path = []
+
+    def dfs(node: str) -> list[str] | None:
+        color[node] = GRAY
+        path.append(node)
+        for neighbor in deps.get(node, set()):
+            if neighbor not in color:
+                continue
+            if color[neighbor] == GRAY:
+                cycle_start = path.index(neighbor)
+                return path[cycle_start:] + [neighbor]
+            if color[neighbor] == WHITE:
+                result = dfs(neighbor)
+                if result:
+                    return result
+        color[node] = BLACK
+        path.pop()
+        return None
+
+    for node in deps:
+        if color[node] == WHITE:
+            cycle = dfs(node)
+            if cycle:
+                return cycle
+    return None
+
+
 def load_graph(path: Path) -> dict:
     """Load a graph definition from a YAML file."""
     with open(path) as f:
@@ -72,3 +117,10 @@ def validate_graph(graph: dict, registry: "TransformerRegistry") -> None:
                     f"Node '{node_name}': Input '{input_key}' references output '{source_output}' "
                     f"but transformer '{source_transformer_name}' only outputs: {source_transformer.outputs}"
                 )
+
+    # Check for circular dependencies
+    deps = _build_dependency_graph(graph)
+    cycle = _detect_cycle(deps)
+    if cycle:
+        cycle_str = " -> ".join(cycle)
+        raise GraphValidationError(f"Circular dependency detected: {cycle_str}")

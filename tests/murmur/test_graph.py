@@ -57,3 +57,11 @@ def test_validate_graph_invalid_wiring():
     registry = make_registry()
     with pytest.raises(GraphValidationError, match="references unknown node 'step0'"):
         validate_graph(graph, registry)
+
+
+def test_validate_graph_circular_dependency():
+    """validate_graph should fail for circular dependencies."""
+    graph = load_graph(FIXTURES / "graphs" / "circular.yaml")
+    registry = make_registry()
+    with pytest.raises(GraphValidationError, match="Circular dependency"):
+        validate_graph(graph, registry)

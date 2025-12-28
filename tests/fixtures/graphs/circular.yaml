@@ -1,0 +1,10 @@
+name: circular
+nodes:
+  - name: a
+    transformer: echo
+    inputs:
+      message: $b.echoed
+  - name: b
+    transformer: echo
+    inputs:
+      message: $a.echoed
