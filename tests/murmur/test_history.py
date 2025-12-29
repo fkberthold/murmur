@@ -1,5 +1,7 @@
 # tests/murmur/test_history.py
+import json
 from datetime import datetime
+from pathlib import Path
 from murmur.history import ReportedStory, StoryHistory
 
 
@@ -84,3 +86,27 @@ def test_story_history_prune_removes_old_stories():
 
     assert "old-story" not in history.stories
     assert "recent-story" in history.stories
+
+
+def test_story_history_save_creates_json_file(tmp_path):
+    """StoryHistory.save should write stories to JSON file."""
+    history = StoryHistory()
+    story = ReportedStory(
+        id="abc123",
+        url="https://example.com",
+        title="Test Story",
+        summary="A test.",
+        topic="Test",
+        story_key="test-story",
+        reported_at=datetime(2024, 12, 28, 10, 0, 0),
+    )
+    history.add(story)
+
+    file_path = tmp_path / "history.json"
+    history.save(file_path)
+
+    assert file_path.exists()
+    data = json.loads(file_path.read_text())
+    assert "stories" in data
+    assert "test-story" in data["stories"]
+    assert data["stories"]["test-story"]["title"] == "Test Story"

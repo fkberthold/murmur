@@ -1,6 +1,8 @@
 # src/murmur/history.py
+import json
 from dataclasses import dataclass, field
 from datetime import datetime, timedelta
+from pathlib import Path
 
 
 @dataclass
@@ -55,3 +57,29 @@ class StoryHistory:
             del self.stories[key]
 
         return len(expired_keys)
+
+    def save(self, path: Path) -> None:
+        """Save history to JSON file."""
+        path.parent.mkdir(parents=True, exist_ok=True)
+
+        data = {
+            "max_age_days": self.max_age_days,
+            "stories": {
+                key: {
+                    "id": story.id,
+                    "url": story.url,
+                    "title": story.title,
+                    "summary": story.summary,
+                    "topic": story.topic,
+                    "story_key": story.story_key,
+                    "reported_at": story.reported_at.isoformat(),
+                    "last_mentioned_at": story.last_mentioned_at.isoformat(),
+                    "mention_count": story.mention_count,
+                    "developments": story.developments,
+                }
+                for key, story in self.stories.items()
+            }
+        }
+
+        with open(path, "w") as f:
+            json.dump(data, f, indent=2)
