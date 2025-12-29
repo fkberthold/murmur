@@ -13,9 +13,10 @@ nodes:
       history_path: $config.history_path
 
   - name: plan
-    transformer: brief-planner
+    transformer: brief-planner-v2
     inputs:
       gathered_data: $dedupe.filtered_news
+      story_context: $dedupe.story_context
 
   - name: generate
     transformer: script-generator
