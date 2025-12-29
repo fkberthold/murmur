@@ -1,5 +1,5 @@
 name: default
-graph: full
+graph: full-v2a
 
 config:
   news_topics_file: news_topics.yaml
