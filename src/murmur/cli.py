@@ -6,25 +6,11 @@ from rich import print as rprint
 
 from murmur.executor import GraphExecutor
 from murmur.graph import load_graph, validate_graph
-from murmur.registry import TransformerRegistry
-from murmur.transformers.brief_planner import BriefPlanner
-from murmur.transformers.news_fetcher import NewsFetcher
-from murmur.transformers.piper_synthesizer import PiperSynthesizer
-from murmur.transformers.script_generator import ScriptGenerator
+from murmur.transformers import create_registry
 
 app = typer.Typer(help="Murmur: A personal intelligence briefing system")
 list_app = typer.Typer(help="List available resources")
 app.add_typer(list_app, name="list")
-
-
-def get_registry() -> TransformerRegistry:
-    """Build and return the transformer registry."""
-    registry = TransformerRegistry()
-    registry.register(NewsFetcher)
-    registry.register(BriefPlanner)
-    registry.register(ScriptGenerator)
-    registry.register(PiperSynthesizer)
-    return registry
 
 
 def load_profile(name: str) -> dict:
@@ -54,7 +40,7 @@ def load_config(profile: dict) -> dict:
 @list_app.command("transformers")
 def list_transformers():
     """List available transformers."""
-    registry = get_registry()
+    registry = create_registry()
     rprint("[bold]Available Transformers:[/bold]\n")
     for name in sorted(registry.list_all()):
         transformer = registry.get(name)
@@ -109,7 +95,7 @@ def generate(
     graph = load_graph(graph_path)
 
     # Build registry
-    registry = get_registry()
+    registry = create_registry()
 
     # Validate
     try:
