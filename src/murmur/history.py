@@ -23,6 +23,14 @@ class ReportedStory:
         if self.last_mentioned_at is None:
             self.last_mentioned_at = self.reported_at
 
+    def add_development(self, development: str, timestamp: datetime | None = None) -> None:
+        """Record a new development for this story."""
+        if timestamp is None:
+            timestamp = datetime.now()
+        self.developments.append(development)
+        self.mention_count += 1
+        self.last_mentioned_at = timestamp
+
 
 @dataclass
 class StoryHistory:

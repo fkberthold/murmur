@@ -147,3 +147,27 @@ def test_story_history_load_returns_empty_for_missing_file(tmp_path):
     history = StoryHistory.load(file_path)
 
     assert history.stories == {}
+
+
+def test_reported_story_add_development():
+    """ReportedStory.add_development should append development and update timestamp."""
+    from datetime import timedelta
+
+    now = datetime.now()
+    story = ReportedStory(
+        id="abc123",
+        url=None,
+        title="Hurricane Milton",
+        summary="Hurricane approaches Florida.",
+        topic="Weather",
+        story_key="hurricane-milton-2024",
+        reported_at=now - timedelta(days=1),
+    )
+
+    later = now
+    story.add_development("Made landfall in Tampa", later)
+
+    assert len(story.developments) == 1
+    assert "Made landfall" in story.developments[0]
+    assert story.mention_count == 2
+    assert story.last_mentioned_at == later
