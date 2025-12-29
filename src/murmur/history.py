@@ -1,6 +1,6 @@
 # src/murmur/history.py
 from dataclasses import dataclass, field
-from datetime import datetime
+from datetime import datetime, timedelta
 
 
 @dataclass
@@ -39,3 +39,19 @@ class StoryHistory:
     def has(self, story_key: str) -> bool:
         """Check if a story key exists in history."""
         return story_key in self.stories
+
+    def prune(self, now: datetime | None = None) -> int:
+        """Remove stories older than max_age_days. Returns count removed."""
+        if now is None:
+            now = datetime.now()
+
+        cutoff = now - timedelta(days=self.max_age_days)
+        expired_keys = [
+            key for key, story in self.stories.items()
+            if story.last_mentioned_at < cutoff
+        ]
+
+        for key in expired_keys:
+            del self.stories[key]
+
+        return len(expired_keys)
