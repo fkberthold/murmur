@@ -2,6 +2,7 @@
 from murmur.registry import TransformerRegistry
 from murmur.transformers.news_fetcher import NewsFetcher
 from murmur.transformers.brief_planner import BriefPlanner
+from murmur.transformers.brief_planner_v2 import BriefPlannerV2
 from murmur.transformers.script_generator import ScriptGenerator
 from murmur.transformers.piper_synthesizer import PiperSynthesizer
 from murmur.transformers.story_deduplicator import StoryDeduplicator
@@ -13,6 +14,7 @@ def create_registry() -> TransformerRegistry:
     registry = TransformerRegistry()
     registry.register(NewsFetcher)
     registry.register(BriefPlanner)
+    registry.register(BriefPlannerV2)
     registry.register(ScriptGenerator)
     registry.register(PiperSynthesizer)
     registry.register(StoryDeduplicator)
