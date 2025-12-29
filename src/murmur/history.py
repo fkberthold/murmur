@@ -83,3 +83,31 @@ class StoryHistory:
 
         with open(path, "w") as f:
             json.dump(data, f, indent=2)
+
+    @classmethod
+    def load(cls, path: Path) -> "StoryHistory":
+        """Load history from JSON file. Returns empty history if file doesn't exist."""
+        if not path.exists():
+            return cls()
+
+        with open(path) as f:
+            data = json.load(f)
+
+        history = cls(max_age_days=data.get("max_age_days", 7))
+
+        for key, story_data in data.get("stories", {}).items():
+            story = ReportedStory(
+                id=story_data["id"],
+                url=story_data["url"],
+                title=story_data["title"],
+                summary=story_data["summary"],
+                topic=story_data["topic"],
+                story_key=story_data["story_key"],
+                reported_at=datetime.fromisoformat(story_data["reported_at"]),
+                last_mentioned_at=datetime.fromisoformat(story_data["last_mentioned_at"]),
+                mention_count=story_data["mention_count"],
+                developments=story_data["developments"],
+            )
+            history.stories[key] = story
+
+        return history

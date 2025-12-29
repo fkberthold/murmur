@@ -110,3 +110,40 @@ def test_story_history_save_creates_json_file(tmp_path):
     assert "stories" in data
     assert "test-story" in data["stories"]
     assert data["stories"]["test-story"]["title"] == "Test Story"
+
+
+def test_story_history_load_restores_from_json(tmp_path):
+    """StoryHistory.load should restore stories from JSON file."""
+    file_path = tmp_path / "history.json"
+    file_path.write_text(json.dumps({
+        "max_age_days": 7,
+        "stories": {
+            "test-story": {
+                "id": "abc123",
+                "url": "https://example.com",
+                "title": "Test Story",
+                "summary": "A test.",
+                "topic": "Test",
+                "story_key": "test-story",
+                "reported_at": "2024-12-28T10:00:00",
+                "last_mentioned_at": "2024-12-28T10:00:00",
+                "mention_count": 1,
+                "developments": [],
+            }
+        }
+    }))
+
+    history = StoryHistory.load(file_path)
+
+    assert "test-story" in history.stories
+    assert history.stories["test-story"].title == "Test Story"
+    assert history.stories["test-story"].reported_at == datetime(2024, 12, 28, 10, 0, 0)
+
+
+def test_story_history_load_returns_empty_for_missing_file(tmp_path):
+    """StoryHistory.load should return empty history if file doesn't exist."""
+    file_path = tmp_path / "nonexistent.json"
+
+    history = StoryHistory.load(file_path)
+
+    assert history.stories == {}
