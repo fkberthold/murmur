@@ -28,10 +28,19 @@ def run_claude(
     Raises:
         ClaudeError: If subprocess fails
     """
-    cmd = ["claude", "--print", "--dangerously-skip-permissions"]
+    cmd = [
+        "claude",
+        "--print",
+        "--dangerously-skip-permissions",
+        "--no-session-persistence",
+        "--setting-sources", "",  # Don't load user/project settings (avoids skills)
+    ]
 
     if allowed_tools:
         cmd.extend(["--allowedTools", ",".join(allowed_tools)])
+    else:
+        # No tools needed - just generate text
+        cmd.extend(["--tools", ""])
 
     result = subprocess.run(
         cmd,
