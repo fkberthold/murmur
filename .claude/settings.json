@@ -1,0 +1,30 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(devbox run:*)",
+      "Bash(devbox shell:*)",
+      "Bash(pytest:*)",
+      "Bash(pip install:*)",
+      "Bash(pip install -e:*)",
+      "Bash(git add:*)",
+      "Bash(git commit:*)",
+      "Bash(git status)",
+      "Bash(git diff:*)",
+      "Bash(git log:*)",
+      "Bash(mkdir:*)",
+      "Bash(touch:*)",
+      "Bash(ls:*)",
+      "Bash(cat:*)",
+      "Bash(python -m pytest:*)",
+      "Bash(python -c:*)",
+      "Read",
+      "Write",
+      "Edit",
+      "Glob",
+      "Grep",
+      "mcp__claude-context__search_code",
+      "mcp__claude-context__index_codebase",
+      "mcp__claude-context__get_indexing_status"
+    ]
+  }
+}

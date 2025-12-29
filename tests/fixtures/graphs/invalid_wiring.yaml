@@ -1,0 +1,6 @@
+name: invalid-wiring
+nodes:
+  - name: step1
+    transformer: echo
+    inputs:
+      message: $step0.missing_output

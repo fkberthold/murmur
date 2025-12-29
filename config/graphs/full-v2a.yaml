@@ -1,0 +1,41 @@
+name: full-v2a
+
+nodes:
+  - name: gather
+    transformer: news-fetcher
+    inputs:
+      topics: $config.news_topics
+
+  - name: dedupe
+    transformer: story-deduplicator
+    inputs:
+      news_items: $gather.gathered_data
+      history_path: $config.history_path
+
+  - name: plan
+    transformer: brief-planner-v2
+    inputs:
+      gathered_data: $dedupe.filtered_news
+      story_context: $dedupe.story_context
+
+  - name: generate
+    transformer: script-generator
+    inputs:
+      plan: $plan.plan
+      gathered_data: $dedupe.filtered_news
+      narrator_style: $config.narrator_style
+      target_duration: $config.target_duration
+
+  - name: history
+    transformer: history-updater
+    inputs:
+      items_to_report: $dedupe.items_to_report
+      history_path: $config.history_path
+
+  - name: synthesize
+    transformer: piper-synthesizer
+    inputs:
+      script: $generate.script
+      piper_model: $config.piper_model
+      output_dir: $config.output_dir
+      sentence_silence: $config.sentence_silence

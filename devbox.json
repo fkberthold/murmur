@@ -1,9 +1,9 @@
 {
   "$schema": "https://raw.githubusercontent.com/jetify-com/devbox/0.14.2/.schema/devbox.schema.json",
   "packages": [
+    "python311",
     "python311Packages.pip",
-    "ffmpeg",
-    "python311@latest"
+    "ffmpeg"
   ],
   "shell": {
     "init_hook": [
@@ -12,8 +12,8 @@
       "pip install -q -e '.[dev]' 2>/dev/null || true"
     ],
     "scripts": {
-      "test":        ["pytest", "tests/", "-v"],
-      "test-cov":    ["pytest", "tests/", "-v", "--cov=murmur"],
+      "test": ["pytest", "tests/", "-v"],
+      "test-cov": ["pytest", "tests/", "-v", "--cov=murmur"],
       "install-tts": ["pip", "install", "-e", ".[tts]"]
     }
   }

@@ -1,0 +1,12 @@
+topics:
+  - name: ai-developments
+    query: "artificial intelligence breakthroughs"
+    priority: high
+
+  - name: tech-industry
+    query: "technology industry news"
+    priority: medium
+
+  - name: science
+    query: "scientific discoveries"
+    priority: low
