@@ -1,12 +1,82 @@
 topics:
-  - name: ai-developments
-    query: "artificial intelligence breakthroughs"
+  # === HIGH PRIORITY ===
+
+  - name: us-politics-federal
+    query: "US federal politics Congress White House legislation"
     priority: high
 
-  - name: tech-industry
-    query: "technology industry news"
+  - name: massachusetts-politics
+    query: "Massachusetts state politics Boston legislature Healey"
+    priority: high
+
+  - name: progressive-politics
+    query: "progressive politics policy left-wing Democratic Party"
+    priority: high
+
+  # === MEDIUM PRIORITY ===
+
+  - name: lucid-dreaming-research
+    query: "lucid dreaming neuroscience research sleep studies"
     priority: medium
 
-  - name: science
-    query: "scientific discoveries"
+  - name: consciousness-studies
+    query: "consciousness research meditation neuroscience awareness studies"
+    priority: medium
+
+  - name: tarot-history
+    query: "tarot history Marseille deck occult playing cards esoteric"
+    priority: medium
+
+  - name: western-esotericism
+    query: "Western esotericism occult history Hermetic Kabbalah Golden Dawn"
+    priority: medium
+
+  - name: chapman-stick
+    query: "Chapman Stick touch guitar Bob Culbertson Stick Enterprises"
+    priority: medium
+
+  - name: filk-music
+    query: "filk music science fiction fantasy folk convention"
+    priority: medium
+
+  - name: nerdcore
+    query: "nerdcore hip hop geek music MC Frontalot"
+    priority: medium
+
+  - name: secular-buddhism
+    query: "secular Buddhism Stephen Batchelor meditation mindfulness"
+    priority: medium
+
+  - name: buddhism-general
+    query: "Buddhism Zen Theravada Tibetan dharma teachings"
+    priority: medium
+
+  - name: industrial-automation
+    query: "industrial automation PLC SCADA manufacturing controls"
+    priority: medium
+
+  - name: refrigeration-hvac
+    query: "commercial refrigeration HVAC industrial cooling systems"
+    priority: medium
+
+  - name: software-testing
+    query: "software testing QA test automation SDET"
+    priority: medium
+
+  # === LOWER PRIORITY ===
+
+  - name: science-general
+    query: "scientific discoveries research breakthroughs"
+    priority: low
+
+  - name: sleep-science
+    query: "sleep research circadian rhythm dreams neuroscience"
+    priority: low
+
+  - name: ai-developments
+    query: "artificial intelligence machine learning"
+    priority: low
+
+  - name: experimental-music
+    query: "experimental music avant-garde progressive rock"
     priority: low
