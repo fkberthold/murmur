@@ -1,89 +1,80 @@
-# Murmur Handoff - Calendar Plugin
+# Murmur Handoff - Post Calendar Plugin
 
 ## Current State
 
-**v1, v2a (Story Continuity), v2b (Slack), and v2c (Plugin Architecture) are complete.**
+**v1, v2a (Story Continuity), v2b (Slack), v2c (Plugin Architecture), and Calendar Plugin are complete.**
 
-All 79 commits pushed to `origin/main`.
+All commits pushed to `origin/main`.
 
-**Tests:** 73 passing (`devbox run test`)
+**Tests:** 83 passing (`devbox run test`)
 
 ## What Was Done This Session
 
-1. **Executed v2c plugin architecture plan** (11 tasks) - Made planner source-agnostic with DataSource protocol
-2. **Fixed Slack integration issues**:
-   - Graph validation for list inputs (`data_sources: [$a, $b]`)
-   - DataSource JSON serialization (`to_dict()`/`from_dict()`)
-   - devbox.json script format fix
-   - Slack MCP prompt - added explicit `limit` parameter instruction
-3. **Updated Slack config** from prototype with real channel IDs
-4. **Full pipeline test** - Generated script now includes Slack data (21 messages found)
+1. **Designed Calendar Plugin** following Slack pattern (brainstorming skill)
+2. **Created implementation plan** with 9 TDD tasks
+3. **Implemented all 9 tasks** using subagent-driven development:
+   - Task 1: Config schema (`src/murmur/config/calendar.py`)
+   - Task 2: User config (`config/calendar.yaml`)
+   - Task 3: Gather prompt (`prompts/calendar_gather.md`)
+   - Task 4: Planner fragment (`prompts/sources/calendar.md`)
+   - Task 5: CalendarFetcher transformer
+   - Task 6: Registry registration
+   - Task 7: v2c graph with calendar node
+   - Task 8: Integration tests
+   - Task 9: This handoff update
 
-## Next Task: Calendar Plugin
+## Calendar Plugin Architecture
 
-Add Google Calendar as a data source using the same plugin pattern as Slack.
+| Component | Path |
+|-----------|------|
+| Config schema | `src/murmur/config/calendar.py` |
+| Transformer | `src/murmur/transformers/calendar_fetcher.py` |
+| Gather prompt | `prompts/calendar_gather.md` |
+| Planner fragment | `prompts/sources/calendar.md` |
+| User config | `config/calendar.yaml` |
+| Graph | `config/graphs/full-v2c.yaml` |
 
-### Architecture (Follow Slack Pattern)
+## MCP Authentication
 
-| Component | Path | Reference |
-|-----------|------|-----------|
-| Config schema | `src/murmur/config/calendar.py` | `slack.py` |
-| Transformer | `src/murmur/transformers/calendar_fetcher.py` | `slack_fetcher.py` |
-| Gather prompt | `prompts/calendar_gather.md` | `slack_gather.md` |
-| Planner fragment | `prompts/sources/calendar.md` | `sources/slack.md` |
-| User config | `config/calendar.yaml` | `slack.yaml` |
-| Tests | `tests/test_calendar_fetcher.py` | `test_slack_fetcher.py` |
+**Google Calendar MCP needs re-authentication** (tokens expire every 7 days in testing mode).
 
-### MCP Tools Available
-
-```
-mcp__google-calendar__list-calendars
-mcp__google-calendar__list-events
-mcp__google-calendar__get-event
-mcp__google-calendar__get-current-time
-```
-
-**Note:** MCP auth may need refresh - got "token expired" error when testing.
-
-### Prototype Reference
-
-Full implementation at `~/Working/daily_brief/_claude/src/data_sources/calendar.py`:
-- Multiple calendars (personal, work, family)
-- Event rules (always_skip, always_mention, canceled_only)
-- Notable event detection for tomorrow
-- Timezone conversion
-- Today's remaining + tomorrow's notable events
-
-Config example: `~/Working/daily_brief/_claude/config/calendar_config.yaml`
-
-### Graph Integration
-
-Add to `config/graphs/no-tts-v2b.yaml`:
-```yaml
-- name: calendar
-  transformer: calendar-fetcher
-  inputs:
-    calendar_config_path: $config.calendar_config_path
-    mcp_config_path: $config.mcp_config_path
+To re-authenticate:
+```bash
+GOOGLE_OAUTH_CREDENTIALS=~/.config/google-calendar-mcp/gcp-oauth.keys.json npx @cocal/google-calendar-mcp auth
 ```
 
-Add `$calendar.calendar` to planner's `data_sources` list.
+Then restart Claude Code to pick up new tokens.
+
+## Testing the Calendar Plugin
+
+```bash
+# Run with calendar (v2c graph)
+devbox run -- python -m murmur.cli generate --graph full-v2c
+
+# Or update work profile to use v2c by default
+# (change graph: full-v2b to graph: full-v2c in config/profiles/work.yaml)
+```
+
+## Next Steps
+
+Potential improvements:
+1. **End-to-end test** - Run full pipeline with calendar once MCP auth is refreshed
+2. **Timezone handling** - Currently uses local time; could use timezone-aware datetimes
+3. **Error handling** - Add try/catch around JSON parsing for better error messages
+4. **Shared utilities** - Extract `extract_json()` to common module (used by both Slack and Calendar fetchers)
 
 ## Commands
 
 ```bash
-devbox run test                                    # Run tests
-devbox run -- python scripts/run_full_pipeline.py # Full generation
+devbox run test                                    # Run tests (83 passing)
+devbox run -- python -m murmur.cli generate       # Generate with default profile
+devbox run -- python -m murmur.cli list graphs    # List available graphs
+devbox run -- python -m murmur.cli list transformers  # List transformers
 ```
 
 ## Key Files
 
-- `src/murmur/transformers/slack_fetcher.py` - Pattern to follow
-- `src/murmur/config/slack.py` - Config pattern
-- `prompts/slack_gather.md` - Prompt pattern
-- `docs/plans/2024-12-29-v2c-plugin-architecture.md` - Plugin design
-
-## Open Questions
-
-1. Start with simple config or full event rules from prototype?
-2. Timezone handling needed? (prototype converts to display_timezone)
+- `docs/plans/2024-12-30-calendar-plugin-design.md` - Design document
+- `docs/plans/2024-12-30-calendar-plugin-implementation.md` - Implementation plan
+- `src/murmur/transformers/calendar_fetcher.py` - Main transformer
+- `config/graphs/full-v2c.yaml` - Graph with all data sources
