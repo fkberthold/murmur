@@ -1,0 +1,63 @@
+# Google Calendar Configuration
+# Define calendars to monitor and event filtering rules
+
+calendars:
+  - name: "Personal"
+    id: "fkberthold@gmail.com"
+    type: personal
+    enabled: true
+
+  - name: "Work"
+    id: "frank@crossnokaye.com"
+    type: work
+    enabled: true
+    timezone: America/Los_Angeles
+
+  - name: "Family"
+    id: "family16459435491078377737@group.calendar.google.com"
+    type: personal
+    enabled: true
+
+event_rules:
+  - pattern: "^Home$"
+    rule: always_skip
+    calendar: Work
+
+  - pattern: "^Deep Work$"
+    rule: always_skip
+    calendar: Work
+
+  - pattern: "Standup"
+    rule: canceled_only
+    calendar: Work
+
+  - pattern: "Interview"
+    rule: always_mention
+    priority: high
+
+  - pattern: "On-Call"
+    rule: always_mention
+    priority: high
+
+notable_patterns:
+  - "flight"
+  - "dentist"
+  - "doctor"
+  - "vacation"
+  - "PTO"
+  - "birthday"
+  - "interview"
+  - "presentation"
+  - "launch"
+  - "deadline"
+  - "appointment"
+  - "travel"
+  - "conference"
+
+settings:
+  include_all_day: true
+  include_declined: false
+  include_tentative: true
+  max_today_events: 10
+  max_tomorrow_events: 5
+  display_timezone: America/New_York
