@@ -1,0 +1,23 @@
+# Slack Configuration
+# Define channels, projects, and colleagues to monitor
+
+channels:
+  # Add your channels here
+  # - name: "general"
+  #   id: "C123456789"  # Get from channel details in Slack
+  #   priority: high    # high, medium, low
+
+colleagues:
+  # People whose messages are always interesting
+  # - name: "Alice"
+  #   slack_id: "U123456789"
+
+projects:
+  # Keywords to search for
+  # - name: "Project X"
+  #   keywords: ["projectx", "project-x"]
+
+settings:
+  lookback_hours: 24
+  include_threads: true
+  min_message_length: 10
