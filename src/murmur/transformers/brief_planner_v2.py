@@ -31,6 +31,10 @@ class BriefPlannerV2(Transformer):
         story_context = input.data.get("story_context", [])
         slack_data = input.data.get("slack_data")  # Optional
 
+        # Handle DataSource wrapper (temporary bridge until planner rewrite)
+        if hasattr(gathered_data, 'data'):
+            gathered_data = gathered_data.data
+
         # Format inputs for prompt
         gathered_text = json.dumps(gathered_data, indent=2)
         context_text = self._format_story_context(story_context)

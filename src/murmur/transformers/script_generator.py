@@ -32,6 +32,10 @@ class ScriptGenerator(Transformer):
         narrator_style = input.data.get("narrator_style", "warm-professional")
         target_duration = input.data.get("target_duration", 5)
 
+        # Handle DataSource wrapper (temporary bridge until planner rewrite)
+        if hasattr(gathered_data, 'data'):
+            gathered_data = gathered_data.data
+
         # Get narrator style description
         style_text = NARRATOR_STYLES.get(narrator_style, NARRATOR_STYLES["warm-professional"])
 

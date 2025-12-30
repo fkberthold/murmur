@@ -3,7 +3,7 @@ import json
 from datetime import datetime
 from pathlib import Path
 from unittest.mock import patch
-from murmur.core import TransformerIO
+from murmur.core import TransformerIO, DataSource
 from murmur.transformers.story_deduplicator import StoryDeduplicator
 from murmur.history import StoryHistory, ReportedStory
 
@@ -15,7 +15,7 @@ def test_story_deduplicator_has_correct_metadata():
     assert deduplicator.name == "story-deduplicator"
     assert "news_items" in deduplicator.inputs
     assert "history_path" in deduplicator.inputs
-    assert "filtered_news" in deduplicator.outputs
+    assert "news" in deduplicator.outputs  # Changed from filtered_news to news (DataSource)
     assert "story_context" in deduplicator.outputs
     assert "items_to_report" in deduplicator.outputs
     assert "llm" in deduplicator.input_effects
@@ -69,9 +69,47 @@ def test_story_deduplicator_filters_duplicates(tmp_path):
 
         result = deduplicator.process(input_io)
 
+        # Should output news as a DataSource
+        news_source = result.data["news"]
+        assert isinstance(news_source, DataSource)
+        assert news_source.name == "news"
+
         # Should only include the new AI story
-        assert len(result.data["filtered_news"]["items"]) == 1
-        assert result.data["filtered_news"]["items"][0]["headline"] == "New AI Model Released"
+        assert len(news_source.data["items"]) == 1
+        assert news_source.data["items"][0]["headline"] == "New AI Model Released"
 
         # story_context should have the new story key
         assert "new-ai-breakthrough" in str(result.data["story_context"])
+
+
+def test_deduplicator_outputs_news_data_source(tmp_path):
+    """Deduplicator should output news as DataSource."""
+    # Setup empty history
+    history_path = tmp_path / "history.json"
+
+    # Mock Claude response
+    mock_response = json.dumps({
+        "items": [
+            {
+                "candidate_index": 0,
+                "story_key": "test-story-1",
+                "action": "include_as_new",
+                "reason": "New story"
+            }
+        ]
+    })
+
+    with patch("murmur.transformers.story_deduplicator.run_claude", return_value=mock_response):
+        deduplicator = StoryDeduplicator()
+
+        result = deduplicator.process(TransformerIO(data={
+            "news_items": {"items": [{"headline": "Test", "story_key": "test-1"}]},
+            "history_path": str(history_path),
+        }))
+
+        # Should output a DataSource
+        assert "news" in result.data
+        source = result.data["news"]
+        assert isinstance(source, DataSource)
+        assert source.name == "news"
+        assert source.prompt_fragment_path == Path("prompts/sources/news.md")

@@ -4,6 +4,7 @@ import json
 from datetime import datetime, timedelta
 from pathlib import Path
 from unittest.mock import patch
+from murmur.core import DataSource
 from murmur.history import StoryHistory, ReportedStory
 from murmur.transformers import create_registry
 from murmur.executor import GraphExecutor
@@ -98,9 +99,14 @@ def test_full_v2a_graph_skips_duplicates(tmp_path):
 
                     result = executor.execute(config)
 
+                    # Verify news is output as DataSource
+                    news_source = result.data["dedupe"]["news"]
+                    assert isinstance(news_source, DataSource)
+                    assert news_source.name == "news"
+
                     # Verify only 1 item made it through (the AI story)
-                    assert len(result.data["dedupe"]["filtered_news"]["items"]) == 1
-                    assert result.data["dedupe"]["filtered_news"]["items"][0]["headline"] == "New AI Model"
+                    assert len(news_source.data["items"]) == 1
+                    assert news_source.data["items"][0]["headline"] == "New AI Model"
 
                     # Verify story context was populated
                     assert len(result.data["dedupe"]["story_context"]) == 1
@@ -197,8 +203,12 @@ def test_v2a_graph_includes_development(tmp_path):
 
                     result = executor.execute(config)
 
+                    # Verify news is output as DataSource
+                    news_source = result.data["dedupe"]["news"]
+                    assert isinstance(news_source, DataSource)
+
                     # Verify the development was included
-                    assert len(result.data["dedupe"]["filtered_news"]["items"]) == 1
+                    assert len(news_source.data["items"]) == 1
 
                     # Verify story context shows it's a development
                     assert len(result.data["dedupe"]["story_context"]) == 1
@@ -259,9 +269,13 @@ def test_v2a_empty_history(tmp_path):
 
                     result = executor.execute(config)
 
+                    # Verify news is output as DataSource
+                    news_source = result.data["dedupe"]["news"]
+                    assert isinstance(news_source, DataSource)
+
                     # Verify story made it through
-                    assert len(result.data["dedupe"]["filtered_news"]["items"]) == 1
-                    assert result.data["dedupe"]["filtered_news"]["items"][0]["headline"] == "Breaking News"
+                    assert len(news_source.data["items"]) == 1
+                    assert news_source.data["items"][0]["headline"] == "Breaking News"
 
                     # Verify history was updated
                     assert result.data["history"]["updated_count"]["new"] == 1

@@ -15,14 +15,14 @@ nodes:
   - name: plan
     transformer: brief-planner-v2
     inputs:
-      gathered_data: $dedupe.filtered_news
+      gathered_data: $dedupe.news
       story_context: $dedupe.story_context
 
   - name: generate
     transformer: script-generator
     inputs:
       plan: $plan.plan
-      gathered_data: $dedupe.filtered_news
+      gathered_data: $dedupe.news
       narrator_style: $config.narrator_style
       target_duration: $config.target_duration
 

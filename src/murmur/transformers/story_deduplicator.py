@@ -2,7 +2,7 @@
 import json
 import re
 from pathlib import Path
-from murmur.core import Transformer, TransformerIO
+from murmur.core import Transformer, TransformerIO, DataSource
 from murmur.claude import run_claude
 from murmur.history import StoryHistory, ReportedStory
 
@@ -23,7 +23,7 @@ class StoryDeduplicator(Transformer):
 
     name = "story-deduplicator"
     inputs = ["news_items", "history_path"]
-    outputs = ["filtered_news", "story_context", "items_to_report"]
+    outputs = ["news", "story_context", "items_to_report"]
     input_effects = ["llm"]
     output_effects = []
 
@@ -89,8 +89,16 @@ class StoryDeduplicator(Transformer):
                 })
             # Skip items with action="skip"
 
+        # Wrap news in DataSource
+        filtered_news = {"items": filtered_items, "gathered_at": news_items.get("gathered_at")}
+        news_source = DataSource(
+            name="news",
+            data=filtered_news,
+            prompt_fragment_path=Path("prompts/sources/news.md"),
+        )
+
         return TransformerIO(data={
-            "filtered_news": {"items": filtered_items, "gathered_at": news_items.get("gathered_at")},
+            "news": news_source,
             "story_context": story_context,
             "items_to_report": items_to_report,
         })
