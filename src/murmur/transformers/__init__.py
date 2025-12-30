@@ -7,6 +7,7 @@ from murmur.transformers.script_generator import ScriptGenerator
 from murmur.transformers.piper_synthesizer import PiperSynthesizer
 from murmur.transformers.story_deduplicator import StoryDeduplicator
 from murmur.transformers.history_updater import HistoryUpdater
+from murmur.transformers.slack_fetcher import SlackFetcher
 
 
 def create_registry() -> TransformerRegistry:
@@ -19,4 +20,5 @@ def create_registry() -> TransformerRegistry:
     registry.register(PiperSynthesizer)
     registry.register(StoryDeduplicator)
     registry.register(HistoryUpdater)
+    registry.register(SlackFetcher)
     return registry
