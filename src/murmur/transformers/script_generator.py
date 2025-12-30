@@ -32,7 +32,7 @@ class ScriptGenerator(Transformer):
         narrator_style = input.data.get("narrator_style", "warm-professional")
         target_duration = input.data.get("target_duration", 5)
 
-        # Handle DataSource wrapper (temporary bridge until planner rewrite)
+        # Handle DataSource wrapper (graph passes DataSource from deduplicator)
         if hasattr(gathered_data, 'data'):
             gathered_data = gathered_data.data
 
