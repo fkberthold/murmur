@@ -56,6 +56,16 @@ murmur generate --profile work
 - **Channel ID**: Right-click channel name -> "Copy link" -> ID is at end of URL
 - **User ID**: Click profile -> "More" -> "Copy member ID"
 
+## Architecture Note
+
+Slack is implemented as a data source plugin. The Slack fetcher outputs a `DataSource` object that the planner consumes generically. This means:
+
+- The planner doesn't have Slack-specific code
+- Slack-specific guidance lives in `prompts/sources/slack.md`
+- Adding new sources (GitHub, email, etc.) follows the same pattern
+
+See `docs/plugin-development.md` for details on creating new data sources.
+
 ## Troubleshooting
 
 ### Docker not running
