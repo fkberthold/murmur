@@ -21,6 +21,9 @@ You are gathering Slack data for a daily briefing. Use the Slack MCP tools to fe
 
 1. Use `mcp__slack__channels_list` to verify channel IDs if needed
 2. Use `mcp__slack__conversations_history` for each priority channel
+   - IMPORTANT: Set `limit` to 50-100 to ensure you get enough messages
+   - The tool's default time filter may be too narrow - request more messages
+   - Filter by timestamp (within last {{lookback_hours}} hours) after fetching
 3. Use `mcp__slack__conversations_search_messages` to find project keyword mentions
 4. Focus on:
    - Important announcements
