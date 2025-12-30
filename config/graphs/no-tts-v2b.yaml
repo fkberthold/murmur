@@ -1,0 +1,41 @@
+name: no-tts-v2b
+
+nodes:
+  - name: gather
+    transformer: news-fetcher
+    inputs:
+      topics: $config.news_topics
+
+  - name: slack
+    transformer: slack-fetcher
+    inputs:
+      slack_config_path: $config.slack_config_path
+      mcp_config_path: $config.mcp_config_path
+
+  - name: dedupe
+    transformer: story-deduplicator
+    inputs:
+      news_items: $gather.gathered_data
+      history_path: $config.history_path
+
+  - name: plan
+    transformer: brief-planner-v2
+    inputs:
+      data_sources:
+        - $dedupe.news
+        - $slack.slack
+      story_context: $dedupe.story_context
+
+  - name: generate
+    transformer: script-generator
+    inputs:
+      plan: $plan.plan
+      gathered_data: $dedupe.news
+      narrator_style: $config.narrator_style
+      target_duration: $config.target_duration
+
+  - name: history
+    transformer: history-updater
+    inputs:
+      items_to_report: $dedupe.items_to_report
+      history_path: $config.history_path

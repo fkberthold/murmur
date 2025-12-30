@@ -18,6 +18,7 @@ class SlackColleague:
     """A colleague whose messages are prioritized."""
     name: str
     slack_id: str = ""
+    priority: str = "medium"
 
 
 @dataclass
@@ -25,6 +26,7 @@ class SlackProject:
     """A project to watch for keyword mentions."""
     name: str
     keywords: list[str] = field(default_factory=list)
+    priority: str = "medium"
 
 
 @dataclass
@@ -32,6 +34,7 @@ class SlackSettings:
     """Slack monitoring settings."""
     lookback_hours: int = 24
     include_threads: bool = True
+    include_reactions: bool = False
     min_message_length: int = 10
 
 
@@ -68,6 +71,7 @@ def load_slack_config(path: Path) -> SlackConfig:
     settings = SlackSettings(
         lookback_hours=settings_data.get("lookback_hours", 24),
         include_threads=settings_data.get("include_threads", True),
+        include_reactions=settings_data.get("include_reactions", False),
         min_message_length=settings_data.get("min_message_length", 10),
     )
 

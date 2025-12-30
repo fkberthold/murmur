@@ -1,23 +1,65 @@
 # Slack Configuration
 # Define channels, projects, and colleagues to monitor
 
+# Channels to monitor for interesting updates
 channels:
-  # Add your channels here
-  # - name: "general"
-  #   id: "C123456789"  # Get from channel details in Slack
-  #   priority: high    # high, medium, low
+  - name: "general"
+    id: "C8WLMBQ9G"
+    priority: medium
 
-colleagues:
-  # People whose messages are always interesting
-  # - name: "Alice"
-  #   slack_id: "U123456789"
+  - name: "tech"
+    id: "C014Q4JKJAF"
+    priority: high
 
+  - name: "random"
+    id: "C8W1H07UY"
+    priority: low
+
+  - name: "sig-reliability-enablement"
+    id: "C04FJHEUWHE"
+    priority: high
+
+  - name: "team-agent-internal"
+    id: "C0A3E1DDZL4"
+    priority: high
+
+  - name: "team-incident-command"
+    id: "C09QS1ES6CS"
+    priority: high
+
+  - name: "tech-llm"
+    id: "C093GRXDFDM"
+    priority: low
+
+  - name: "war-room"
+    id: "C01382SKQ4X"
+    priority: high
+
+# Projects to watch for mentions
 projects:
-  # Keywords to search for
-  # - name: "Project X"
-  #   keywords: ["projectx", "project-x"]
+  - name: "gemini"
+    keywords:
+      - "gemini"
+      - "chillville"
+    priority: high
 
+# Colleagues whose messages are always interesting
+colleagues:
+  - name: "Mitch"
+    slack_id: "U03L1P330C9"
+    priority: high
+
+  - name: "Jason"
+    slack_id: "U04ERS5B1PS"
+    priority: high
+
+  - name: "Bill"
+    slack_id: "U0924AA51NE"
+    priority: medium
+
+# Settings
 settings:
   lookback_hours: 24
   include_threads: true
+  include_reactions: false
   min_message_length: 10

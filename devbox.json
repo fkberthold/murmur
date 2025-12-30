@@ -9,12 +9,13 @@
     "init_hook": [
       "[ ! -d .venv ] && python -m venv .venv --upgrade-deps",
       ". .venv/bin/activate",
-      "pip install -q -e '.[dev]' 2>/dev/null || true"
+      "pip install -q -e '.[dev]' 2>/dev/null || true",
+      "[ -f $PWD/.env ] && set -a && . $PWD/.env && set +a"
     ],
     "scripts": {
-      "test": ["pytest", "tests/", "-v"],
-      "test-cov": ["pytest", "tests/", "-v", "--cov=murmur"],
-      "install-tts": ["pip", "install", "-e", ".[tts]"]
+      "test": "pytest tests/ -v",
+      "test-cov": "pytest tests/ -v --cov=murmur",
+      "install-tts": "pip install -e '.[tts]'"
     }
   }
 }
