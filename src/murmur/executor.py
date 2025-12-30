@@ -2,9 +2,22 @@ import json
 from datetime import datetime
 from pathlib import Path
 from typing import Any
-from murmur.core import TransformerIO
+from murmur.core import TransformerIO, DataSource
 from murmur.registry import TransformerRegistry
 from murmur.graph import _build_dependency_graph, validate_graph
+
+
+def _serialize_for_json(obj: Any) -> Any:
+    """Convert objects to JSON-serializable form, handling DataSource specially."""
+    if isinstance(obj, DataSource):
+        return obj.to_dict()
+    elif isinstance(obj, dict):
+        return {k: _serialize_for_json(v) for k, v in obj.items()}
+    elif isinstance(obj, list):
+        return [_serialize_for_json(item) for item in obj]
+    elif isinstance(obj, Path):
+        return str(obj)
+    return obj
 
 
 def topological_sort(deps: dict[str, set[str]]) -> list[str]:
@@ -67,7 +80,7 @@ class GraphExecutor:
         self.artifact_dir.mkdir(parents=True, exist_ok=True)
         artifact_path = self.artifact_dir / f"{self.run_id}_{node_name}.json"
         with open(artifact_path, "w") as f:
-            json.dump(data, f, indent=2, default=str)
+            json.dump(_serialize_for_json(data), f, indent=2, default=str)
 
     def _load_cached_artifact(self, node_name: str) -> dict | None:
         """Load cached node output if it exists."""

@@ -4,7 +4,7 @@
 import json
 from pathlib import Path
 from datetime import datetime
-from murmur.executor import GraphExecutor
+from murmur.executor import GraphExecutor, _serialize_for_json
 from murmur.graph import load_graph
 from murmur.transformers import create_registry
 
@@ -45,7 +45,7 @@ with open(script_path, 'w') as f:
 
 # Save full JSON output
 with open(json_path, 'w') as f:
-    json.dump(results.data, f, indent=2, default=str)
+    json.dump(_serialize_for_json(results.data), f, indent=2, default=str)
 
 print(f'Script saved to: {script_path}')
 print(f'Full output saved to: {json_path}')

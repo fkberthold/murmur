@@ -29,6 +29,23 @@ class DataSource:
     data: dict = field(default_factory=dict)
     prompt_fragment_path: Path | None = None
 
+    def to_dict(self) -> dict:
+        """Convert to JSON-serializable dict."""
+        return {
+            "name": self.name,
+            "data": self.data,
+            "prompt_fragment_path": str(self.prompt_fragment_path) if self.prompt_fragment_path else None,
+        }
+
+    @classmethod
+    def from_dict(cls, d: dict) -> "DataSource":
+        """Reconstruct from dict."""
+        return cls(
+            name=d["name"],
+            data=d.get("data", {}),
+            prompt_fragment_path=Path(d["prompt_fragment_path"]) if d.get("prompt_fragment_path") else None,
+        )
+
 
 class Transformer(ABC):
     """
