@@ -12,18 +12,6 @@ You are writing a spoken briefing script. Your output will be read aloud by a te
 
 {{gathered_data}}
 
-## Data Sources
-
-The briefing plan may include content from multiple sources:
-- **News**: Web search results on topics of interest
-- **Slack**: Workplace messages and discussions (if configured)
-
-When Slack content is included in the plan:
-- Weave workplace context naturally ("Speaking of work...")
-- Keep colleague names but avoid sensitive details
-- Focus on decisions, announcements, and interesting discussions
-- Transition smoothly between news and workplace topics
-
 ## Instructions
 
 Write a natural, conversational script that:
