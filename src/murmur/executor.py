@@ -125,6 +125,10 @@ class GraphExecutor:
         self, source: Any, config: dict, node_outputs: dict[str, dict]
     ) -> Any:
         """Resolve a $config.x or $node.output reference."""
+        # Handle lists by resolving each element
+        if isinstance(source, list):
+            return [self._resolve_reference(item, config, node_outputs) for item in source]
+
         if not isinstance(source, str) or not source.startswith("$"):
             return source
 

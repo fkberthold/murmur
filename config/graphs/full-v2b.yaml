@@ -21,9 +21,10 @@ nodes:
   - name: plan
     transformer: brief-planner-v2
     inputs:
-      gathered_data: $dedupe.news
+      data_sources:
+        - $dedupe.news
+        - $slack.slack
       story_context: $dedupe.story_context
-      slack_data: $slack.slack
 
   - name: generate
     transformer: script-generator

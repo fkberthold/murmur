@@ -15,7 +15,8 @@ nodes:
   - name: plan
     transformer: brief-planner-v2
     inputs:
-      gathered_data: $dedupe.news
+      data_sources:
+        - $dedupe.news
       story_context: $dedupe.story_context
 
   - name: generate
