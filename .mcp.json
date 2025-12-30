@@ -1,0 +1,18 @@
+{
+  "mcpServers": {
+    "slack": {
+      "type": "stdio",
+      "command": "docker",
+      "args": [
+        "run", "-i", "--rm",
+        "-e", "SLACK_MCP_XOXP_TOKEN",
+        "-e", "SLACK_USER_TOKEN",
+        "ghcr.io/korotovsky/slack-mcp-server",
+        "mcp-server", "-t", "stdio"
+      ],
+      "env": {
+        "SLACK_MCP_XOXP_TOKEN": "${SLACK_USER_TOKEN}"
+      }
+    }
+  }
+}
