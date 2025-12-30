@@ -2,7 +2,7 @@
 import json
 import re
 from pathlib import Path
-from murmur.core import Transformer, TransformerIO
+from murmur.core import Transformer, TransformerIO, DataSource
 from murmur.claude import run_claude
 
 
@@ -18,33 +18,28 @@ def extract_json(text: str) -> str:
 
 
 class BriefPlannerV2(Transformer):
-    """Plans the narrative structure with story continuity awareness."""
+    """Plans the narrative structure from multiple data sources."""
 
     name = "brief-planner-v2"
-    inputs = ["gathered_data", "story_context", "slack_data"]
+    inputs = ["data_sources", "story_context"]
     outputs = ["plan"]
     input_effects = ["llm"]
     output_effects = []
 
     def process(self, input: TransformerIO) -> TransformerIO:
-        gathered_data = input.data.get("gathered_data", {})
+        data_sources: list[DataSource] = input.data.get("data_sources", [])
         story_context = input.data.get("story_context", [])
-        slack_data = input.data.get("slack_data")  # Optional
 
-        # Handle DataSource wrapper (temporary bridge until planner rewrite)
-        if hasattr(gathered_data, 'data'):
-            gathered_data = gathered_data.data
-
-        # Format inputs for prompt
-        gathered_text = json.dumps(gathered_data, indent=2)
+        # Format story context
         context_text = self._format_story_context(story_context)
-        slack_text = self._format_slack_data(slack_data) if slack_data else "(No Slack data available)"
+
+        # Assemble data sources section dynamically
+        sources_text = self._assemble_sources(data_sources)
 
         # Load and fill prompt template
         prompt_template = PROMPT_PATH.read_text()
         prompt = prompt_template.replace("{{story_context}}", context_text)
-        prompt = prompt.replace("{{gathered_data}}", gathered_text)
-        prompt = prompt.replace("{{slack_highlights}}", slack_text)
+        prompt = prompt.replace("{{data_sources}}", sources_text)
 
         # Call Claude
         response = run_claude(prompt, allowed_tools=[])
@@ -54,6 +49,34 @@ class BriefPlannerV2(Transformer):
         plan = json.loads(json_str)
 
         return TransformerIO(data={"plan": plan})
+
+    def _assemble_sources(self, sources: list[DataSource]) -> str:
+        """Assemble prompt content from all data sources."""
+        if not sources:
+            return "(No data sources available)"
+
+        sections = []
+        for source in sources:
+            section = self._render_source(source)
+            if section:
+                sections.append(section)
+
+        return "\n\n".join(sections) if sections else "(No data available)"
+
+    def _render_source(self, source: DataSource) -> str:
+        """Render a single data source using its prompt fragment."""
+        # Load prompt fragment if available
+        if source.prompt_fragment_path and source.prompt_fragment_path.exists():
+            fragment_template = source.prompt_fragment_path.read_text()
+        else:
+            # Fallback: generic format
+            fragment_template = f"## {source.name.title()}\n\n{{{{data}}}}"
+
+        # Format data as JSON for the prompt
+        data_text = json.dumps(source.data, indent=2)
+
+        # Replace data placeholder
+        return fragment_template.replace("{{data}}", data_text)
 
     def _format_story_context(self, story_context: list) -> str:
         """Format story context for the prompt."""
@@ -72,42 +95,3 @@ class BriefPlannerV2(Transformer):
                 lines.append(f"- `{story_key}`: New story")
 
         return "\n".join(lines)
-
-    def _format_slack_data(self, slack_data) -> str:
-        """Format Slack data for the planning prompt."""
-        # Handle DataSource wrapper (temporary bridge until planner rewrite)
-        if hasattr(slack_data, 'data'):
-            slack_data = slack_data.data
-
-        if not slack_data:
-            return "(No Slack data)"
-
-        lines = []
-
-        # Add summary if present
-        if summary := slack_data.get("summary"):
-            lines.append(f"**Summary:** {summary}")
-            lines.append("")
-
-        # Add important messages
-        messages = slack_data.get("messages", [])
-        if messages:
-            lines.append("**Key Messages:**")
-            for msg in messages[:5]:  # Limit to top 5
-                author = msg.get("author", "Unknown")
-                text = msg.get("text", "")[:200]  # Truncate long messages
-                channel = msg.get("channel_name", "")
-                importance = msg.get("importance", "medium")
-                lines.append(f"- [{importance}] #{channel} - {author}: {text}")
-
-        # Add mentions
-        mentions = slack_data.get("mentions", [])
-        if mentions:
-            lines.append("")
-            lines.append("**Project Mentions:**")
-            for mention in mentions[:3]:
-                author = mention.get("author", "Unknown")
-                text = mention.get("text", "")[:150]
-                lines.append(f"- {author}: {text}")
-
-        return "\n".join(lines) if lines else "(No significant Slack activity)"

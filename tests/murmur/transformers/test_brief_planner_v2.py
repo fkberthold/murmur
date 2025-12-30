@@ -1,16 +1,17 @@
 # tests/murmur/transformers/test_brief_planner_v2.py
 import json
+from pathlib import Path
 from unittest.mock import patch
-from murmur.core import TransformerIO
+from murmur.core import TransformerIO, DataSource
 from murmur.transformers.brief_planner_v2 import BriefPlannerV2
 
 
 def test_brief_planner_v2_has_correct_metadata():
-    """BriefPlannerV2 should accept story_context input."""
+    """BriefPlannerV2 should accept data_sources and story_context inputs."""
     planner = BriefPlannerV2()
 
     assert planner.name == "brief-planner-v2"
-    assert "gathered_data" in planner.inputs
+    assert "data_sources" in planner.inputs
     assert "story_context" in planner.inputs
     assert "plan" in planner.outputs
 
@@ -22,10 +23,17 @@ def test_brief_planner_v2_includes_story_context():
         "total_items": 1,
     })
 
+    # Create a DataSource for news data
+    news_source = DataSource(
+        name="news",
+        data={"items": [{"headline": "Test"}]},
+        prompt_fragment_path=Path("prompts/sources/news.md"),
+    )
+
     with patch("murmur.transformers.brief_planner_v2.run_claude", return_value=mock_response) as mock_claude:
         planner = BriefPlannerV2()
         input_io = TransformerIO(data={
-            "gathered_data": {"items": [{"headline": "Test"}]},
+            "data_sources": [news_source],
             "story_context": [{"story_key": "test-story", "type": "development", "note": "Update"}],
         })
 

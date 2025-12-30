@@ -68,8 +68,8 @@ def test_slack_fetcher_in_registry():
     assert fetcher.name == "slack-fetcher"
 
 
-def test_planner_handles_missing_slack():
-    """Planner should work without Slack data."""
+def test_planner_handles_empty_data_sources():
+    """Planner should work with empty data sources list."""
     from murmur.transformers.brief_planner_v2 import BriefPlannerV2
     from murmur.core import TransformerIO
 
@@ -78,9 +78,9 @@ def test_planner_handles_missing_slack():
     with patch('murmur.transformers.brief_planner_v2.run_claude') as mock_claude:
         mock_claude.return_value = '{"sections": [], "total_items": 0}'
 
-        # No slack_data provided
+        # Empty data_sources list
         result = planner.process(TransformerIO(data={
-            "gathered_data": {"items": []},
+            "data_sources": [],
             "story_context": [],
         }))
 
