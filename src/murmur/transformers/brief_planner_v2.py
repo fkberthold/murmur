@@ -21,7 +21,7 @@ class BriefPlannerV2(Transformer):
     """Plans the narrative structure with story continuity awareness."""
 
     name = "brief-planner-v2"
-    inputs = ["gathered_data", "story_context"]
+    inputs = ["gathered_data", "story_context", "slack_data"]
     outputs = ["plan"]
     input_effects = ["llm"]
     output_effects = []
@@ -29,15 +29,18 @@ class BriefPlannerV2(Transformer):
     def process(self, input: TransformerIO) -> TransformerIO:
         gathered_data = input.data.get("gathered_data", {})
         story_context = input.data.get("story_context", [])
+        slack_data = input.data.get("slack_data")  # Optional
 
         # Format inputs for prompt
         gathered_text = json.dumps(gathered_data, indent=2)
         context_text = self._format_story_context(story_context)
+        slack_text = self._format_slack_data(slack_data) if slack_data else "(No Slack data available)"
 
         # Load and fill prompt template
         prompt_template = PROMPT_PATH.read_text()
         prompt = prompt_template.replace("{{story_context}}", context_text)
         prompt = prompt.replace("{{gathered_data}}", gathered_text)
+        prompt = prompt.replace("{{slack_highlights}}", slack_text)
 
         # Call Claude
         response = run_claude(prompt, allowed_tools=[])
@@ -65,3 +68,38 @@ class BriefPlannerV2(Transformer):
                 lines.append(f"- `{story_key}`: New story")
 
         return "\n".join(lines)
+
+    def _format_slack_data(self, slack_data: dict) -> str:
+        """Format Slack data for the planning prompt."""
+        if not slack_data:
+            return "(No Slack data)"
+
+        lines = []
+
+        # Add summary if present
+        if summary := slack_data.get("summary"):
+            lines.append(f"**Summary:** {summary}")
+            lines.append("")
+
+        # Add important messages
+        messages = slack_data.get("messages", [])
+        if messages:
+            lines.append("**Key Messages:**")
+            for msg in messages[:5]:  # Limit to top 5
+                author = msg.get("author", "Unknown")
+                text = msg.get("text", "")[:200]  # Truncate long messages
+                channel = msg.get("channel_name", "")
+                importance = msg.get("importance", "medium")
+                lines.append(f"- [{importance}] #{channel} - {author}: {text}")
+
+        # Add mentions
+        mentions = slack_data.get("mentions", [])
+        if mentions:
+            lines.append("")
+            lines.append("**Project Mentions:**")
+            for mention in mentions[:3]:
+                author = mention.get("author", "Unknown")
+                text = mention.get("text", "")[:150]
+                lines.append(f"- {author}: {text}")
+
+        return "\n".join(lines) if lines else "(No significant Slack activity)"

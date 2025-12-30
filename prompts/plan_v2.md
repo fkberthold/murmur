@@ -11,6 +11,16 @@ Items marked as "development" are updates to stories the user has heard before. 
 
 Items marked as "new" are being reported for the first time.
 
+## Slack Highlights
+
+{{slack_highlights}}
+
+When Slack data is present:
+- Consider mentioning notable team discussions
+- Reference decisions that affect the user
+- Note any direct messages or mentions
+- Weave workplace context naturally into the briefing
+
 ## Available News Items
 
 {{gathered_data}}
