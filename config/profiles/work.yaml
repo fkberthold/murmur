@@ -1,0 +1,11 @@
+name: work
+graph: full-v2b
+config:
+  news_topics_file: news_topics.yaml
+  slack_config_path: config/slack.yaml
+  mcp_config_path: .mcp.json
+  piper_model: en_US-amy-medium
+  sentence_silence: 0.3
+  narrator_style: warm-professional
+  target_duration: 5
+  history_path: data/history/work.json
