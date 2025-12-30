@@ -55,8 +55,47 @@ def test_slack_fetcher_uses_mcp_tools():
 
 
 def test_slack_fetcher_output_structure():
-    """Slack fetcher should output slack_data key."""
+    """Slack fetcher should output slack key."""
     from murmur.transformers.slack_fetcher import SlackFetcher
 
     fetcher = SlackFetcher()
-    assert "slack_data" in fetcher.outputs
+    assert "slack" in fetcher.outputs
+
+
+def test_slack_fetcher_outputs_data_source():
+    """Slack fetcher should output a DataSource object."""
+    from murmur.transformers.slack_fetcher import SlackFetcher
+    from murmur.core import TransformerIO, DataSource
+    from pathlib import Path
+    import tempfile
+    import yaml
+
+    config_data = {
+        "channels": [{"name": "general", "id": "C123", "priority": "high"}],
+        "settings": {"lookback_hours": 24}
+    }
+
+    with tempfile.NamedTemporaryFile(mode='w', suffix='.yaml', delete=False) as f:
+        yaml.dump(config_data, f)
+        config_path = Path(f.name)
+
+    try:
+        fetcher = SlackFetcher()
+
+        with patch.object(fetcher, '_run_claude') as mock_claude:
+            mock_claude.return_value = '{"messages": [], "summary": "No activity"}'
+
+            result = fetcher.process(TransformerIO(data={
+                "slack_config_path": str(config_path),
+                "mcp_config_path": "/tmp/mcp.json",
+            }))
+
+            # Should output a DataSource
+            assert "slack" in result.data
+            source = result.data["slack"]
+            assert isinstance(source, DataSource)
+            assert source.name == "slack"
+            assert "messages" in source.data
+            assert source.prompt_fragment_path == Path("prompts/sources/slack.md")
+    finally:
+        config_path.unlink()

@@ -23,7 +23,7 @@ nodes:
     inputs:
       gathered_data: $dedupe.filtered_news
       story_context: $dedupe.story_context
-      slack_data: $slack.slack_data
+      slack_data: $slack.slack
 
   - name: generate
     transformer: script-generator

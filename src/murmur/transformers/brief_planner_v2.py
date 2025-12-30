@@ -69,8 +69,12 @@ class BriefPlannerV2(Transformer):
 
         return "\n".join(lines)
 
-    def _format_slack_data(self, slack_data: dict) -> str:
+    def _format_slack_data(self, slack_data) -> str:
         """Format Slack data for the planning prompt."""
+        # Handle DataSource wrapper (temporary bridge until planner rewrite)
+        if hasattr(slack_data, 'data'):
+            slack_data = slack_data.data
+
         if not slack_data:
             return "(No Slack data)"
 

@@ -3,7 +3,7 @@
 import json
 import re
 from pathlib import Path
-from murmur.core import Transformer, TransformerIO
+from murmur.core import Transformer, TransformerIO, DataSource
 from murmur.claude import run_claude
 from murmur.config.slack import load_slack_config
 
@@ -24,7 +24,7 @@ class SlackFetcher(Transformer):
 
     name = "slack-fetcher"
     inputs = ["slack_config_path", "mcp_config_path"]
-    outputs = ["slack_data"]
+    outputs = ["slack"]
     input_effects = ["mcp:slack"]
     output_effects = []
 
@@ -64,7 +64,14 @@ class SlackFetcher(Transformer):
         json_str = extract_json(response)
         slack_data = json.loads(json_str)
 
-        return TransformerIO(data={"slack_data": slack_data})
+        # Return as DataSource
+        source = DataSource(
+            name="slack",
+            data=slack_data,
+            prompt_fragment_path=Path("prompts/sources/slack.md"),
+        )
+
+        return TransformerIO(data={"slack": source})
 
     def _run_claude(self, prompt: str, mcp_config_path: str | None = None) -> str:
         """Run Claude with MCP tools enabled."""
