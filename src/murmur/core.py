@@ -10,6 +10,26 @@ class TransformerIO:
     artifacts: dict[str, Path] = field(default_factory=dict)
 
 
+@dataclass
+class DataSource:
+    """
+    Standardized output from data source fetchers.
+
+    Enables plugin-style architecture where:
+    - Fetchers output DataSource objects
+    - Planner consumes them generically without source-specific code
+    - Each source provides its own prompt fragment describing how to use its data
+
+    Attributes:
+        name: Identifier for this source (e.g., "slack", "news", "github")
+        data: Raw structured data from the source
+        prompt_fragment_path: Path to markdown file describing how to interpret this data
+    """
+    name: str
+    data: dict = field(default_factory=dict)
+    prompt_fragment_path: Path | None = None
+
+
 class Transformer(ABC):
     """
     Base class for all graph nodes.
