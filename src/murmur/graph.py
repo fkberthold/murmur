@@ -11,6 +11,19 @@ class GraphValidationError(Exception):
     pass
 
 
+def _extract_node_refs(source) -> list[str]:
+    """Extract node names from a source reference (handles lists and strings)."""
+    refs = []
+    if isinstance(source, list):
+        for item in source:
+            refs.extend(_extract_node_refs(item))
+    elif isinstance(source, str) and source.startswith("$") and not source.startswith("$config."):
+        parts = source[1:].split(".", 1)
+        if len(parts) == 2:
+            refs.append(parts[0])
+    return refs
+
+
 def _build_dependency_graph(graph: dict) -> dict[str, set[str]]:
     """Build adjacency list of node dependencies."""
     deps: dict[str, set[str]] = {}
@@ -18,10 +31,7 @@ def _build_dependency_graph(graph: dict) -> dict[str, set[str]]:
         node_name = node["name"]
         deps[node_name] = set()
         for source in node.get("inputs", {}).values():
-            if isinstance(source, str) and source.startswith("$") and not source.startswith("$config."):
-                parts = source[1:].split(".", 1)
-                if len(parts) == 2:
-                    deps[node_name].add(parts[0])
+            deps[node_name].update(_extract_node_refs(source))
     return deps
 
 
@@ -87,36 +97,7 @@ def validate_graph(graph: dict, registry: "TransformerRegistry") -> None:
 
         # Check input wiring
         for input_key, source in node.get("inputs", {}).items():
-            if not isinstance(source, str):
-                continue
-            if not source.startswith("$"):
-                continue
-            if source.startswith("$config."):
-                continue  # Config references validated separately
-
-            # Parse $node.output reference
-            parts = source[1:].split(".", 1)
-            if len(parts) != 2:
-                raise GraphValidationError(
-                    f"Node '{node_name}': Invalid reference format: '{source}'"
-                )
-
-            source_node, source_output = parts
-
-            # Check source node exists
-            if source_node not in nodes:
-                raise GraphValidationError(
-                    f"Node '{node_name}': Input '{input_key}' references unknown node '{source_node}'"
-                )
-
-            # Check source output exists on transformer
-            source_transformer_name = nodes[source_node]["transformer"]
-            source_transformer = registry.get(source_transformer_name)
-            if source_output not in source_transformer.outputs:
-                raise GraphValidationError(
-                    f"Node '{node_name}': Input '{input_key}' references output '{source_output}' "
-                    f"but transformer '{source_transformer_name}' only outputs: {source_transformer.outputs}"
-                )
+            _validate_source_refs(source, node_name, input_key, nodes, registry)
 
     # Check for circular dependencies
     deps = _build_dependency_graph(graph)
@@ -124,3 +105,44 @@ def validate_graph(graph: dict, registry: "TransformerRegistry") -> None:
     if cycle:
         cycle_str = " -> ".join(cycle)
         raise GraphValidationError(f"Circular dependency detected: {cycle_str}")
+
+
+def _validate_source_refs(
+    source, node_name: str, input_key: str, nodes: dict, registry: "TransformerRegistry"
+) -> None:
+    """Validate source references, handling both strings and lists."""
+    if isinstance(source, list):
+        for item in source:
+            _validate_source_refs(item, node_name, input_key, nodes, registry)
+        return
+
+    if not isinstance(source, str):
+        return
+    if not source.startswith("$"):
+        return
+    if source.startswith("$config."):
+        return  # Config references validated separately
+
+    # Parse $node.output reference
+    parts = source[1:].split(".", 1)
+    if len(parts) != 2:
+        raise GraphValidationError(
+            f"Node '{node_name}': Invalid reference format: '{source}'"
+        )
+
+    source_node, source_output = parts
+
+    # Check source node exists
+    if source_node not in nodes:
+        raise GraphValidationError(
+            f"Node '{node_name}': Input '{input_key}' references unknown node '{source_node}'"
+        )
+
+    # Check source output exists on transformer
+    source_transformer_name = nodes[source_node]["transformer"]
+    source_transformer = registry.get(source_transformer_name)
+    if source_output not in source_transformer.outputs:
+        raise GraphValidationError(
+            f"Node '{node_name}': Input '{input_key}' references output '{source_output}' "
+            f"but transformer '{source_transformer_name}' only outputs: {source_transformer.outputs}"
+        )
