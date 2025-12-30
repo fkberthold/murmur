@@ -4,6 +4,7 @@ config:
   news_topics_file: news_topics.yaml
   slack_config_path: config/slack.yaml
   mcp_config_path: .mcp.json
+  calendar_config_path: config/calendar.yaml
   piper_model: en_US-amy-medium
   sentence_silence: 0.3
   narrator_style: warm-professional
